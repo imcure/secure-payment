@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IMCure - Payment Successful</title>
+  <meta name="description" content="Your payment has been received. Proceed to complete your e-KYC verification." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Fraunces:wght@700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .success-page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px 60px;
+    }
+
+    .success-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      max-width: 480px;
+      margin-bottom: 40px;
+    }
+
+    .success-header .logo-img {
+      height: 36px;
+      width: auto;
+    }
+
+    .success-header .ssl-badge {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: .04em;
+    }
+
+    .success-card {
+      background: var(--card-bg);
+      border-radius: var(--radius-lg);
+      padding: 48px 36px 44px;
+      max-width: 480px;
+      width: 100%;
+      box-shadow: var(--shadow-card);
+      text-align: center;
+      animation: fadeUp 0.5s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .check-wrap {
+      width: 88px;
+      height: 88px;
+      border-radius: 50%;
+      background: var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 28px;
+      box-shadow: 0 8px 32px rgba(245, 166, 35, 0.45);
+      animation: popIn 0.55s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.1s both;
+    }
+
+    @keyframes popIn {
+      0%   { transform: scale(0); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .check-wrap svg {
+      animation: drawCheck 0.4s ease 0.6s both;
+    }
+
+    @keyframes drawCheck {
+      from { opacity: 0; transform: scale(0.7); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    .success-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #edfbf1;
+      color: var(--success);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      padding: 5px 14px;
+      border-radius: 100px;
+      margin-bottom: 16px;
+    }
+
+    .success-title {
+      font-family: var(--font-display);
+      font-size: clamp(1.6rem, 5vw, 2.1rem);
+      font-weight: 900;
+      color: var(--navy);
+      line-height: 1.2;
+      margin-bottom: 14px;
+    }
+
+    .success-desc {
+      font-size: 15px;
+      color: var(--text-muted);
+      line-height: 1.65;
+      max-width: 340px;
+      margin: 0 auto 36px;
+    }
+
+    .success-desc strong {
+      color: var(--navy);
+      font-weight: 600;
+    }
+
+    .divider-line {
+      width: 48px;
+      height: 3px;
+      background: var(--gold);
+      border-radius: 99px;
+      margin: 0 auto 32px;
+      opacity: 0.7;
+    }
+
+    .kyc-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      background: var(--gold);
+      color: var(--navy);
+      font-family: var(--font-body);
+      font-weight: 700;
+      font-size: 16px;
+      padding: 17px 40px;
+      border-radius: 100px;
+      border: none;
+      cursor: pointer;
+      width: 100%;
+      max-width: 340px;
+      box-shadow: var(--shadow-btn);
+      transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
+      text-decoration: none;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .kyc-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 255, 255, 0);
+      transition: background var(--transition);
+      border-radius: inherit;
+    }
+
+    .kyc-btn:hover {
+      background: var(--gold-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 36px rgba(245, 166, 35, 0.55);
+    }
+
+    .kyc-btn:hover::before {
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .kyc-btn:active {
+      transform: translateY(0);
+      box-shadow: 0 4px 14px rgba(245, 166, 35, 0.4);
+    }
+
+    .kyc-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .kyc-btn-arrow {
+      flex-shrink: 0;
+      transition: transform var(--transition);
+    }
+
+    .kyc-btn:hover .kyc-btn-arrow {
+      transform: translateX(4px);
+    }
+
+    .kyc-btn-spinner {
+      display: none;
+    }
+
+    .kyc-btn.loading .kyc-btn-arrow {
+      display: none;
+    }
+
+    .kyc-btn.loading .kyc-btn-spinner {
+      display: inline-flex;
+    }
+
+    .spin {
+      animation: spin 0.9s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .kyc-note {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 16px;
+      line-height: 1.5;
+    }
+
+    .info-strip {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--gold-light);
+      border: 1px solid rgba(245, 166, 35, 0.25);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      margin-bottom: 32px;
+      text-align: left;
+    }
+
+    .info-strip-icon {
+      flex-shrink: 0;
+      color: var(--gold-dark);
+    }
+
+    .info-strip-text {
+      font-size: 13px;
+      color: var(--navy);
+      line-height: 1.5;
+    }
+
+    .info-strip-text strong {
+      font-weight: 600;
+    }
+
+    .success-footer {
+      margin-top: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    @media (max-width: 480px) {
+      .success-card {
+        padding: 36px 20px 36px;
+        border-radius: var(--radius-md);
+      }
+
+      .check-wrap {
+        width: 72px;
+        height: 72px;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="bg-grain"></div>
+
+<main class="page-wrapper success-page">
+
+  <div class="success-header">
+    <div class="logo-wrap" style="margin:0;">
+      <img src="logo.png" alt="IMCure" class="logo-img" />
+    </div>
+    <div class="ssl-badge">
+      <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><rect x="3" y="6" width="8" height="7" rx="1.5" fill="#1a2340" opacity=".15"/><rect x="3" y="6" width="8" height="7" rx="1.5" stroke="#1a2340" stroke-width="1.2" fill="none"/><path d="M5 6V4.5A2 2 0 0 1 9 4.5V6" stroke="#1a2340" stroke-width="1.2" stroke-linecap="round"/></svg>
+      256-bit SSL Secured
+    </div>
+  </div>
+
+  <div class="success-card">
+
+    <div class="check-wrap">
+      <svg width="38" height="38" viewBox="0 0 38 38" fill="none">
+        <path d="M9 19L15.5 25.5L29 12" stroke="#1a2340" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+
+    <div class="success-badge">
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4" fill="#1A7F37"/></svg>
+      Payment Received
+    </div>
+
+    <h1 class="success-title">Payment Successful!</h1>
+
+    <p class="success-desc">
+      Thank you, <strong id="customerName">valued customer</strong>!<br />
+      Your payment details have been recorded. Your next step is to complete your <strong>e-KYC verification</strong> to activate your IMCure account.
+    </p>
+
+    <div class="divider-line"></div>
+
+    <div class="info-strip">
+      <svg class="info-strip-icon" width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <circle cx="9" cy="9" r="7.5" stroke="#E09015" stroke-width="1.4"/>
+        <path d="M9 8v5" stroke="#E09015" stroke-width="1.6" stroke-linecap="round"/>
+        <circle cx="9" cy="5.5" r=".9" fill="#E09015"/>
+      </svg>
+      <p class="info-strip-text">
+        <strong>Next step:</strong> Complete your e-KYC to verify your identity and unlock full access to IMCure services.
+      </p>
+    </div>
+
+    <button class="kyc-btn" id="kycBtn" type="button">
+      <span class="kyc-btn-text">Proceed to KYC</span>
+      <svg class="kyc-btn-arrow" width="20" height="20" viewBox="0 0 20 20" fill="none">
+        <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span class="kyc-btn-spinner">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" class="spin">
+          <circle cx="10" cy="10" r="8" stroke="rgba(26,35,64,0.25)" stroke-width="2.5"/>
+          <path d="M10 2A8 8 0 0 1 18 10" stroke="#1a2340" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+      </span>
+    </button>
+
+    <p class="kyc-note">Clicking the button above will open the KYC verification form in this tab.</p>
+
+  </div>
+
+  <footer class="success-footer">
+    <svg width="18" height="18" viewBox="0 0 32 32" fill="none">
+      <rect width="32" height="32" rx="8" fill="#F5A623"/>
+      <path d="M16 7C11.03 7 7 11.03 7 16C7 20.97 11.03 25 16 25C20.97 25 25 20.97 25 16C25 11.03 20.97 7 16 7Z" fill="#1a2340"/>
+      <path d="M16 10.5C12.97 10.5 10.5 12.97 10.5 16C10.5 19.03 12.97 21.5 16 21.5C19.03 21.5 21.5 19.03 21.5 16C21.5 12.97 19.03 10.5 16 10.5Z" fill="#F5A623"/>
+    </svg>
+    <strong>Powered by IMCure</strong>
+    <span style="opacity:.4;">|</span>
+    Passion for better life
+  </footer>
+
+</main>
+
+<script>
+  (function () {
+    "use strict";
+
+    var KYC_PAGE_URL = "https://imcure.github.io/imcure-kyc/";
+
+    var kycBtn = document.getElementById("kycBtn");
+    var customerNameEl = document.getElementById("customerName");
+
+    var customer = null;
+    try {
+      var raw = localStorage.getItem("imcure_customer");
+      if (raw) customer = JSON.parse(raw);
+    } catch (e) {}
+
+    if (customer && customer.name) {
+      customerNameEl.textContent = customer.name;
+    }
+
+    var params = new URLSearchParams(window.location.search);
+    var sid = params.get("sid");
+
+    // Replace current history entry so back button skips this page
+    // (prevents user from going back to payment form after success)
+    if (window.history && window.history.replaceState) {
+      window.history.replaceState({ imcure: "success" }, document.title, window.location.href);
+    }
+
+    kycBtn.addEventListener("click", function () {
+      kycBtn.disabled = true;
+      kycBtn.classList.add("loading");
+      kycBtn.querySelector(".kyc-btn-text").textContent = "Opening KYC…";
+
+      var url = new URL(KYC_PAGE_URL);
+      url.searchParams.set("payment", "success");
+      if (sid) url.searchParams.set("sid", sid);
+
+      window.location.href = url.toString();
+    });
+  })();
+</script>
+</body>
+</html>
