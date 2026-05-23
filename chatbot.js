@@ -309,7 +309,8 @@ TONE RULES:
         resp = await fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(payload),
+          referrerPolicy: "no-referrer"
         });
       } catch (networkErr) {
         // fetch itself failed (no internet, CORS preflight blocked, etc.)
