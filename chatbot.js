@@ -10,10 +10,10 @@
      1. CONFIGURATION — Edit freely
   ────────────────────────────────────────── */
   const CB_CONFIG = {
-    // ▼ PASTE YOUR GEMINI API KEY HERE ▼
-    apiKey: "AIzaSyC9dfsvfNlF0ON38kx37-DGDOs014_zuJQ",
+    // ▼ PASTE YOUR CLOUDFLARE WORKER URL HERE (no trailing slash) ▼
+    proxyUrl: "PASTE_YOUR_WORKER_URL_HERE",
 
-    // Gemini model — gemini-2.5-flash is current free model (2026)
+    // Model is set server-side in gemini-worker.js — no need to change this
     model: "gemini-2.5-flash",
 
     // Brand details shown in the header
@@ -278,7 +278,7 @@ TONE RULES:
      9. GEMINI API CALL
   ────────────────────────────────────────── */
   async function askGemini(userText) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${CB_CONFIG.model}:generateContent?key=${CB_CONFIG.apiKey}`;
+    const url = CB_CONFIG.proxyUrl;
 
     const payload = {
       system_instruction: {
@@ -309,8 +309,7 @@ TONE RULES:
         resp = await fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-          referrerPolicy: "no-referrer"
+          body: JSON.stringify(payload)
         });
       } catch (networkErr) {
         // fetch itself failed (no internet, CORS preflight blocked, etc.)
