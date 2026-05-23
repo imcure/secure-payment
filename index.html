@@ -1,128 +1,17 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>IMCURE</title>
-  <meta name="theme-color" content="#f7efd9" />
-  <meta name="description" content="Welcome to the Journey of IMCURE." />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&family=Fraunces:wght@700;900&display=swap" rel="stylesheet" />
-  <style>
-    :root {
-      --ink: #1f2733;
-      --muted: #736a5b;
-      --cream: #f7efd9;
-      --cream-2: #fffaf0;
-      --gold: #c99836;
-      --gold-dark: #8b6421;
-      --white: #fff;
-      --font-display: 'Fraunces', Georgia, serif;
-      --font-body: 'DM Sans', system-ui, sans-serif;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
-    body {
-      min-height: 100vh;
-      color: var(--ink);
-      font-family: var(--font-body);
-      background:
-        radial-gradient(circle at 15% 12%, rgba(201,152,54,.22), transparent 30%),
-        radial-gradient(circle at 88% 20%, rgba(255,255,255,.9), transparent 26%),
-        linear-gradient(135deg, #fffaf0 0%, #f7efd9 52%, #efe1bd 100%);
-      overflow-x: hidden;
-    }
-    .page {
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      padding: clamp(24px, 5vw, 56px) 20px;
-      text-align: center;
-      animation: enter .55s ease both;
-    }
-    .inner {
-      width: min(720px, 100%);
-      padding: clamp(26px, 6vw, 52px);
-      border: 1px solid rgba(201,152,54,.25);
-      border-radius: 28px;
-      background: rgba(255,250,240,.78);
-      box-shadow: 0 30px 90px rgba(72,54,24,.14), inset 0 1px 0 rgba(255,255,255,.8);
-      backdrop-filter: blur(14px);
-    }
-    .logo {
-      width: clamp(250px, 46vw, 460px);
-      height: auto;
-      display: block;
-      margin: 0 auto clamp(22px, 4vw, 38px);
-      filter: drop-shadow(0 16px 26px rgba(96,72,24,.13));
-    }
-    .kicker {
-      color: var(--gold-dark);
-      font-size: 12px;
-      font-weight: 800;
-      letter-spacing: .18em;
-      text-transform: uppercase;
-      margin-bottom: 14px;
-    }
-    .headline {
-      font-family: var(--font-display);
-      font-size: clamp(34px, 7vw, 76px);
-      line-height: .96;
-      letter-spacing: 0;
-      margin-bottom: 18px;
-    }
-    .welcome {
-      color: var(--muted);
-      font-size: clamp(17px, 2.4vw, 22px);
-      line-height: 1.55;
-      max-width: 520px;
-      margin: 0 auto 34px;
-      font-weight: 500;
-    }
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 58px;
-      padding: 0 34px;
-      border-radius: 999px;
-      background: linear-gradient(135deg, #d7ad55, #a97820);
-      color: var(--white);
-      text-decoration: none;
-      font-weight: 800;
-      box-shadow: 0 16px 34px rgba(169,120,32,.28);
-      transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
-    }
-    .btn:hover { transform: translateY(-2px); filter: brightness(1.03); box-shadow: 0 20px 42px rgba(169,120,32,.34); }
-    .btn:focus-visible { outline: 3px solid rgba(201,152,54,.45); outline-offset: 5px; }
-    @keyframes enter {
-      from { opacity: 0; transform: translateY(14px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    @media (max-width: 520px) {
-      .inner { border-radius: 22px; }
-      .logo { width: min(340px, 88vw); }
-      .btn { width: 100%; }
-    }
-  </style>
-</head>
-<body>
-  <main class="page">
-    <section class="inner" aria-label="IMCURE landing">
-      <img src="logo.png" alt="IMCURE" class="logo" />
-      <p class="kicker">Secure healthcare onboarding</p>
-      <h1 class="headline">Welcome to IMCURE</h1>
-      <p class="welcome">A premium, protected payment journey for your healthcare service verification.</p>
-      <a class="btn" id="paymentLink" href="payment.html">Continue to Payment</a>
-    </section>
-  </main>
-  <script>
-    (function () {
-      var link = document.getElementById("paymentLink");
-      var qs = window.location.search || "";
-      if (qs) link.href = "payment.html" + qs;
-    })();
-  </script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <meta name="description" content="IMCure enterprise payment and eKYC onboarding." />
+    <title>IMCure Onboarding</title>
+    <script type="module" crossorigin src="/secure-payment/assets/index-Bp9Lr8lM.js"></script>
+    <link rel="modulepreload" crossorigin href="/secure-payment/assets/vendor-DyjaQF1w.js">
+    <link rel="modulepreload" crossorigin href="/secure-payment/assets/pdf-BgdqGPNC.js">
+    <link rel="stylesheet" crossorigin href="/secure-payment/assets/index-B1YydenY.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
 </html>

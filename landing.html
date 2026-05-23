@@ -4,12 +4,92 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>IMCURE</title>
-  <meta http-equiv="refresh" content="0; url=index.html" />
-  <script>
-    window.location.replace("index.html" + (window.location.search || ""));
-  </script>
+  <meta name="description" content="Welcome to the Journey of IMCURE." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Fraunces:wght@700;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --gold: #f5a623;
+      --navy: #1a2340;
+      --cream: #f8f4df;
+      --muted: #6b7a99;
+      --white: #fff;
+      --font-display: 'Fraunces', Georgia, serif;
+      --font-body: 'DM Sans', system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.74), rgba(248,244,223,.96)),
+        var(--cream);
+      color: var(--navy);
+      font-family: var(--font-body);
+    }
+    .page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 28px 20px;
+      text-align: center;
+    }
+    .inner {
+      width: min(520px, 100%);
+    }
+    .logo {
+      width: min(360px, 84vw);
+      height: auto;
+      display: block;
+      margin: 0 auto 30px;
+    }
+    .welcome {
+      color: var(--muted);
+      font-size: clamp(18px, 4vw, 24px);
+      line-height: 1.45;
+      margin-bottom: 34px;
+      font-weight: 500;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 52px;
+      padding: 0 30px;
+      border-radius: 999px;
+      background: var(--navy);
+      color: var(--white);
+      text-decoration: none;
+      font-weight: 700;
+      box-shadow: 0 12px 30px rgba(26,35,64,.18);
+      transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+    .btn:hover {
+      background: #243259;
+      box-shadow: 0 16px 38px rgba(26,35,64,.24);
+      transform: translateY(-1px);
+    }
+    .btn:focus-visible {
+      outline: 3px solid rgba(245,166,35,.65);
+      outline-offset: 4px;
+    }
+  </style>
 </head>
 <body>
-  <a href="index.html">Continue to IMCURE</a>
+  <main class="page">
+    <section class="inner" aria-label="IMCURE landing">
+      <img src="logo.png" alt="IMCURE" class="logo" />
+      <p class="welcome">Welcome to the Journey of IMCURE</p>
+      <a class="btn" id="paymentLink" href="payment.html">Proceed to Payment</a>
+    </section>
+  </main>
+  <script>
+    (function () {
+      var link = document.getElementById('paymentLink');
+      var qs = window.location.search || '';
+      if (qs) link.href = 'payment.html' + qs;
+    })();
+  </script>
 </body>
 </html>
