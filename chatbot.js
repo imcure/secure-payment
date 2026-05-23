@@ -11,7 +11,7 @@
   ────────────────────────────────────────── */
   const CB_CONFIG = {
     // ▼ PASTE YOUR CLOUDFLARE WORKER URL HERE (no trailing slash) ▼
-    proxyUrl: "imcure-chatbot.cygnusimcure.workers.dev",
+    proxyUrl: "https://imcure-chatbot.cygnusimcure.workers.dev",
 
     // Model is set server-side in gemini-worker.js — no need to change this
     model: "gemini-2.5-flash",
