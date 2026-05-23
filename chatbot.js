@@ -319,6 +319,9 @@ TONE RULES:
       }
 
       if (resp.status === 429) {
+        const body429 = await resp.json().catch(() => ({}));
+        const reason429 = body429?.error?.message || body429?.error?.status || "no detail";
+        console.error("[IMCure Chatbot] 429 reason:", reason429);
         lastError = new Error("RATE_LIMIT");
         continue;
       }
