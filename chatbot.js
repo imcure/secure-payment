@@ -11,7 +11,7 @@
   ────────────────────────────────────────── */
   const CB_CONFIG = {
     // ▼ PASTE YOUR GEMINI API KEY HERE ▼
-    apiKey: "AIzaSyCRj3ArAEMPY5ARfgNi1SY_1qFP1gB9GZw",
+    apiKey: "AIzaSyDzE9feeRBLbgzWsi5E3T2T-WdeZAZCRyA",
 
     // Gemini model — gemini-2.5-flash is current free model (2026)
     model: "gemini-2.5-flash",
