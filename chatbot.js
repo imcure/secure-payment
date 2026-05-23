@@ -304,20 +304,37 @@ TONE RULES:
         await new Promise(r => setTimeout(r, delays[i]));
       }
 
-      const resp = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
+      let resp;
+      try {
+        resp = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+      } catch (networkErr) {
+        // fetch itself failed (no internet, CORS preflight blocked, etc.)
+        lastError = new Error("NETWORK_ERROR");
+        console.error("[IMCure Chatbot] Network error on attempt", i + 1, networkErr);
+        continue;
+      }
 
       if (resp.status === 429) {
         lastError = new Error("RATE_LIMIT");
-        continue; // wait and retry
+        continue;
       }
 
       if (!resp.ok) {
-        const err = await resp.json().catch(() => ({}));
-        throw new Error(err?.error?.message || `API error ${resp.status}`);
+        const errBody = await resp.json().catch(() => ({}));
+        const apiMsg = errBody?.error?.message || "";
+        console.error("[IMCure Chatbot] API error", resp.status, apiMsg);
+
+        if (resp.status === 403 || apiMsg.toLowerCase().includes("api key") || apiMsg.includes("API_KEY")) {
+          throw new Error("API_KEY_INVALID");
+        }
+        if (resp.status === 404 || apiMsg.toLowerCase().includes("not found")) {
+          throw new Error("MODEL_NOT_FOUND");
+        }
+        throw new Error(apiMsg || `API error ${resp.status}`);
       }
 
       const data = await resp.json();
@@ -362,10 +379,15 @@ TONE RULES:
 
     } catch (err) {
       removeTyping();
-      const errMsg = err.message.includes("API_KEY_INVALID")
-        ? "API key issue. Please contact support."
+      console.error("[IMCure Chatbot] sendMessage failed:", err.message);
+      const errMsg = err.message === "API_KEY_INVALID"
+        ? "There's a configuration issue on our end. Please contact your IMCure representative."
+        : err.message === "MODEL_NOT_FOUND"
+        ? "Service configuration error. Please contact support."
         : err.message === "RATE_LIMIT"
         ? "I'm getting a lot of requests right now. Please wait a moment and try again 🙏"
+        : err.message === "NETWORK_ERROR"
+        ? "Couldn't reach the server. Please check your internet connection and try again."
         : "Sorry, I couldn't connect right now. Please try again in a moment.";
       appendMessage("bot", `⚠️ ${errMsg}`);
     }
