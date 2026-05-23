@@ -296,7 +296,7 @@ TONE RULES:
     };
 
     // Retry up to 3 times with exponential backoff (handles 429 rate limits)
-    const delays = [0, 3000, 7000];
+    const delays = [0, 8000, 20000];
     let lastError;
 
     for (let i = 0; i < delays.length; i++) {
