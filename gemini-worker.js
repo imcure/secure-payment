@@ -67,6 +67,11 @@ export default {
     const data   = await geminiResp.json().catch(() => ({}));
     const status = geminiResp.ok ? 200 : geminiResp.status;
 
+    if (!geminiResp.ok) {
+      const reason = data?.error?.message || data?.error?.status || "unknown";
+      console.error(`[IMCure Worker] Gemini ${status}: ${reason}`);
+    }
+
     return json(data, status);
   },
 };
