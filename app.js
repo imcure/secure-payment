@@ -10,7 +10,7 @@
   var CASHFREE_BACKEND = "https://imcure.in/cashfree";
 
   // "sandbox" for testing, "production" for live payments
-  var CASHFREE_MODE = "sandbox";
+  var CASHFREE_MODE = "production";
 
   // Google Apps Script URL (for NEFT logging — keep as is)
   var GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxb3pViOzs7fvKJ7PuuJF64BCDlnBUuWGzk2ZIpPqbMlsdQ4scJhRlXyLH-xTwe7n-q/exec";
