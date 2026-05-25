@@ -19,6 +19,8 @@
   //  CONSTANTS
   // ══════════════════════════════════════════════════════════════
   var KYC_PAGE_URL          = "https://imcure.github.io/imcure-kyc/";
+  var UPI_ID                = "imcure@kotak";
+  var UPI_NAME              = "IMCure";
   var SUBMISSION_COOLDOWN_MS = 8000;
   var BACKEND_TIMEOUT_MS     = 6500;
   var BACKEND_RETRY_DELAY_MS = 900;
@@ -38,13 +40,14 @@
   var paymentActions   = document.getElementById("paymentActions");
   var neftBtn          = document.getElementById("neftBtn");
   var cashfreeBtn      = document.getElementById("cashfreeBtn");
+  var upiBtn           = document.getElementById("upiBtn");
   var cashfreeSubtext  = document.getElementById("cashfreeSubtext");
   var popup            = document.getElementById("paymentPopup");
   var popupAmount      = document.getElementById("popupAmount");
   var popupClose       = document.getElementById("popupClose");
   var toastEl          = document.getElementById("toast");
 
-  if (!neftBtn || !cashfreeBtn || !amountInput) return;
+  if (!neftBtn || !cashfreeBtn || !upiBtn || !amountInput) return;
 
   // ══════════════════════════════════════════════════════════════
   //  STATE
@@ -151,6 +154,7 @@
     var spinner = document.getElementById(spinnerId);
     neftBtn.disabled     = loading;
     cashfreeBtn.disabled = loading;
+    upiBtn.disabled      = loading;
     button.disabled      = loading;
     if (text)    text.textContent = loading ? "Processing…" : button.dataset.defaultText;
     if (arrow)   arrow.style.display = loading ? "none" : "";
@@ -319,6 +323,41 @@
   }
 
   // ══════════════════════════════════════════════════════════════
+  //  UPI HANDLER — opens UPI app with pre-filled amount
+  // ══════════════════════════════════════════════════════════════
+  async function handleUpi() {
+    if (!validateAll()) {
+      var firstError = document.querySelector(".is-error");
+      if (firstError) firstError.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+
+    var submission = buildSubmission("UPI");
+    saveCustomerForKyc(submission);
+
+    postToGoogleAppsScript(submission).catch(function (e) {
+      warn("Apps Script log failed (non-critical)", e);
+    });
+
+    pendingSuccessUrl = "success.html?sid=" + encodeURIComponent(submission.submission_id);
+
+    var upiLink = "upi://pay?pa=" + encodeURIComponent(UPI_ID) +
+                  "&pn=" + encodeURIComponent(UPI_NAME) +
+                  "&am=" + paymentAmount +
+                  "&cu=INR" +
+                  "&tn=" + encodeURIComponent("IMCure Payment");
+
+    // Open UPI app
+    window.location.href = upiLink;
+
+    // After 1.5 s show QR popup as fallback (in case UPI app did not open)
+    setTimeout(function () {
+      toast("Scan the QR code if your UPI app did not open.", "", 4500);
+      showPaymentPopup();
+    }, 1500);
+  }
+
+  // ══════════════════════════════════════════════════════════════
   //  CASHFREE HANDLER — new
   // ══════════════════════════════════════════════════════════════
   async function handleCashfreePayment() {
@@ -396,6 +435,7 @@
   // ══════════════════════════════════════════════════════════════
   neftBtn.dataset.defaultText      = neftBtn.querySelector(".pay-btn-text").textContent;
   cashfreeBtn.dataset.defaultText  = cashfreeBtn.querySelector(".pay-btn-text").textContent;
+  upiBtn.dataset.defaultText       = upiBtn.querySelector(".pay-btn-text").textContent;
 
   if (paymentAmount) {
     amountInput.value          = String(paymentAmount);
@@ -467,6 +507,7 @@
 
   neftBtn.addEventListener("click", handleNeft);
   cashfreeBtn.addEventListener("click", handleCashfreePayment);
+  upiBtn.addEventListener("click", handleUpi);
 
   log("Loaded", { amount: paymentAmount, cashfreeMode: CASHFREE_MODE, backend: CASHFREE_BACKEND });
   updatePaymentActionsVisibility();

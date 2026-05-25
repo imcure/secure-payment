@@ -761,6 +761,9 @@ body {
   .payment-actions.is-visible {
     grid-template-columns: 1fr 1fr;
   }
+  .payment-actions.is-visible #cashfreeBtn {
+    grid-column: 1 / -1;
+  }
 }
 
 @media (max-width: 360px) {
