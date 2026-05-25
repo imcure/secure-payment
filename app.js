@@ -7,7 +7,7 @@
 
   // Your Hostinger domain (no trailing slash)
   // Example: "https://yourdomain.com" or "https://yourdomain.hostinger.app"
-  var CASHFREE_BACKEND = "https://YOUR_HOSTINGER_DOMAIN/cashfree";
+  var CASHFREE_BACKEND = "https://imcure.in/cashfree";
 
   // "sandbox" for testing, "production" for live payments
   var CASHFREE_MODE = "sandbox";
