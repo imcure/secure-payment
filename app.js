@@ -1,70 +1,70 @@
-﻿(function () {
+(function () {
   "use strict";
 
-  /*
-    GitHub Pages configuration:
-    - Paste the Google Apps Script Web App /exec URL below.
-    - To redeploy safely, edit the EXISTING Apps Script deployment and select "New version".
-      Do not create a brand-new deployment unless you also replace this URL.
-    - Apps Script Script Properties hold RESEND_API_KEY, ADMIN_EMAIL, and FROM_EMAIL.
-  */
-  const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxb3pViOzs7fvKJ7PuuJF64BCDlnBUuWGzk2ZIpPqbMlsdQ4scJhRlXyLH-xTwe7n-q/exec";
-  const UPI_ID = "imcure@kotak";
-  const UPI_NAME = "IMCure";
-  const KYC_PAGE_URL = "https://imcure.github.io/imcure-kyc/";
-  const SUBMISSION_COOLDOWN_MS = 8000;
-  const BACKEND_TIMEOUT_MS = 6500;
-  const BACKEND_RETRY_DELAY_MS = 900;
+  // ══════════════════════════════════════════════════════════════
+  //  CONFIGURATION — edit these three lines
+  // ══════════════════════════════════════════════════════════════
 
-  const amountFieldGroup = document.getElementById("amountFieldGroup");
-  const amountDisplay = document.getElementById("amountDisplay");
-  const amountValue = document.getElementById("amountValue");
-  const amountInput = document.getElementById("amount");
-  const fullNameInput = document.getElementById("fullName");
-  const emailInput = document.getElementById("email");
-  const phoneInput = document.getElementById("phone");
-  const decl1 = document.getElementById("decl1");
-  const decl2 = document.getElementById("decl2");
-  const paymentActions = document.getElementById("paymentActions");
-  const neftBtn = document.getElementById("neftBtn");
-  const upiBtn = document.getElementById("upiBtn");
-  const popup = document.getElementById("paymentPopup");
-  const popupAmount = document.getElementById("popupAmount");
-  const popupClose = document.getElementById("popupClose");
-  const toastEl = document.getElementById("toast");
+  // Your Hostinger domain (no trailing slash)
+  // Example: "https://yourdomain.com" or "https://yourdomain.hostinger.app"
+  var CASHFREE_BACKEND = "https://YOUR_HOSTINGER_DOMAIN/cashfree";
 
-  // Exit silently if this page doesn't have the payment form
-  if (!neftBtn || !upiBtn || !amountInput) return;
+  // "sandbox" for testing, "production" for live payments
+  var CASHFREE_MODE = "sandbox";
 
-  const amountParam = new URLSearchParams(window.location.search).get("amount");
-  const parsedAmount = amountParam ? Number(amountParam) : NaN;
+  // Google Apps Script URL (for NEFT logging — keep as is)
+  var GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxb3pViOzs7fvKJ7PuuJF64BCDlnBUuWGzk2ZIpPqbMlsdQ4scJhRlXyLH-xTwe7n-q/exec";
 
-  let paymentAmount = Number.isFinite(parsedAmount) && parsedAmount > 0 ? parsedAmount : null;
-  let isSubmitting = false;
-  let lastSubmissionAt = 0;
-  let pendingSuccessUrl = null;
+  // ══════════════════════════════════════════════════════════════
+  //  CONSTANTS
+  // ══════════════════════════════════════════════════════════════
+  var KYC_PAGE_URL          = "https://imcure.github.io/imcure-kyc/";
+  var SUBMISSION_COOLDOWN_MS = 8000;
+  var BACKEND_TIMEOUT_MS     = 6500;
+  var BACKEND_RETRY_DELAY_MS = 900;
 
-  function log() {
-    if (window.console && console.log) {
-      console.log.apply(console, ["[IMCure Payment]"].concat(Array.prototype.slice.call(arguments)));
-    }
-  }
+  // ══════════════════════════════════════════════════════════════
+  //  DOM REFERENCES
+  // ══════════════════════════════════════════════════════════════
+  var amountFieldGroup = document.getElementById("amountFieldGroup");
+  var amountDisplay    = document.getElementById("amountDisplay");
+  var amountValue      = document.getElementById("amountValue");
+  var amountInput      = document.getElementById("amount");
+  var fullNameInput    = document.getElementById("fullName");
+  var emailInput       = document.getElementById("email");
+  var phoneInput       = document.getElementById("phone");
+  var decl1            = document.getElementById("decl1");
+  var decl2            = document.getElementById("decl2");
+  var paymentActions   = document.getElementById("paymentActions");
+  var neftBtn          = document.getElementById("neftBtn");
+  var cashfreeBtn      = document.getElementById("cashfreeBtn");
+  var cashfreeSubtext  = document.getElementById("cashfreeSubtext");
+  var popup            = document.getElementById("paymentPopup");
+  var popupAmount      = document.getElementById("popupAmount");
+  var popupClose       = document.getElementById("popupClose");
+  var toastEl          = document.getElementById("toast");
 
-  function warn() {
-    if (window.console && console.warn) {
-      console.warn.apply(console, ["[IMCure Payment]"].concat(Array.prototype.slice.call(arguments)));
-    }
-  }
+  if (!neftBtn || !cashfreeBtn || !amountInput) return;
 
-  function showError(id, message) {
-    const el = document.getElementById(id);
-    if (el) el.textContent = message;
-  }
+  // ══════════════════════════════════════════════════════════════
+  //  STATE
+  // ══════════════════════════════════════════════════════════════
+  var amountParam   = new URLSearchParams(window.location.search).get("amount");
+  var parsedAmount  = amountParam ? Number(amountParam) : NaN;
+  var paymentAmount = Number.isFinite(parsedAmount) && parsedAmount > 0 ? parsedAmount : null;
+  var isSubmitting  = false;
+  var lastSubmissionAt = 0;
+  var pendingSuccessUrl = null;
 
-  function clearError(id) {
-    const el = document.getElementById(id);
-    if (el) el.textContent = "";
-  }
+  // ══════════════════════════════════════════════════════════════
+  //  UTILITIES
+  // ══════════════════════════════════════════════════════════════
+  function log()  { if (window.console && console.log)  console.log.apply(console,  ["[IMCure]"].concat([].slice.call(arguments))); }
+  function warn() { if (window.console && console.warn) console.warn.apply(console, ["[IMCure]"].concat([].slice.call(arguments))); }
+
+  function showError(id, msg)  { var el = document.getElementById(id); if (el) el.textContent = msg; }
+  function clearError(id)      { var el = document.getElementById(id); if (el) el.textContent = ""; }
+  function getErrorMessage(e)  { if (!e) return "Something went wrong. Please try again."; if (typeof e === "string") return e; return e.message || "Something went wrong."; }
 
   function setFieldState(input, isError) {
     if (!input) return;
@@ -84,99 +84,77 @@
     toastEl._timer = setTimeout(function () { toastEl.classList.remove("show"); }, duration || 3500);
   }
 
-  function getErrorMessage(error) {
-    if (!error) return "Something went wrong. Please try again.";
-    if (typeof error === "string") return error;
-    return error.message || "Something went wrong. Please try again.";
+  function getTimestamp() {
+    return new Date().toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Kolkata" });
   }
 
-  function hasValidUpiId() {
-    return /^[^@\s]+@[^@\s]+$/.test(UPI_ID);
+  function getDateOnly() {
+    return new Date().toLocaleDateString("en-IN", { dateStyle: "medium", timeZone: "Asia/Kolkata" });
   }
 
-  function hasRequiredBackendConfig() {
-    return /^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/.test(GOOGLE_APPS_SCRIPT_URL);
+  function makeSubmissionId() {
+    return "imcure_" + Date.now() + "_" + Math.random().toString(36).slice(2, 10);
   }
 
-  function setButtonLoading(button, spinnerId, loading) {
-    const text = button.querySelector(".pay-btn-text");
-    const arrow = button.querySelector(".pay-btn-arrow");
-    const spinner = document.getElementById(spinnerId);
-    button.disabled = loading;
-    neftBtn.disabled = loading;
-    upiBtn.disabled = loading;
-    text.textContent = loading ? "Processing..." : button.dataset.defaultText;
-    arrow.style.display = loading ? "none" : "";
-    spinner.style.display = loading ? "" : "none";
-  }
-
-  function updatePaymentActionsVisibility() {
-    const show = decl1.checked && decl2.checked && Boolean(paymentAmount);
-    paymentActions.classList.toggle("is-visible", show);
-    paymentActions.setAttribute("aria-hidden", show ? "false" : "true");
-  }
-
+  // ══════════════════════════════════════════════════════════════
+  //  VALIDATION
+  // ══════════════════════════════════════════════════════════════
   function validateName() {
-    const value = fullNameInput.value.trim();
-    if (value.length < 2) {
-      showError("nameError", "Please enter your full name.");
-      setFieldState(fullNameInput, true);
-      return false;
-    }
-    clearError("nameError");
-    setFieldState(fullNameInput, false);
-    return true;
+    var v = fullNameInput.value.trim();
+    if (v.length < 2) { showError("nameError", "Please enter your full name."); setFieldState(fullNameInput, true); return false; }
+    clearError("nameError"); setFieldState(fullNameInput, false); return true;
   }
 
   function validateEmail() {
-    const value = emailInput.value.trim();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-      showError("emailError", "Please enter a valid email address.");
-      setFieldState(emailInput, true);
-      return false;
-    }
-    clearError("emailError");
-    setFieldState(emailInput, false);
-    return true;
+    var v = emailInput.value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) { showError("emailError", "Please enter a valid email address."); setFieldState(emailInput, true); return false; }
+    clearError("emailError"); setFieldState(emailInput, false); return true;
   }
 
   function validatePhone() {
-    const value = phoneInput.value.trim();
-    if (!/^[6-9]\d{9}$/.test(value)) {
-      showError("phoneError", "Enter a valid 10-digit Indian mobile number.");
-      setFieldState(phoneInput, true);
-      return false;
-    }
-    clearError("phoneError");
-    setFieldState(phoneInput, false);
-    return true;
+    var v = phoneInput.value.trim();
+    if (!/^[6-9]\d{9}$/.test(v)) { showError("phoneError", "Enter a valid 10-digit Indian mobile number."); setFieldState(phoneInput, true); return false; }
+    clearError("phoneError"); setFieldState(phoneInput, false); return true;
   }
 
   function validateAmount() {
-    if (paymentAmount) {
-      clearError("amountError");
-      setFieldState(amountInput, false);
-      return true;
-    }
+    if (paymentAmount) { clearError("amountError"); setFieldState(amountInput, false); return true; }
     showError("amountError", "Payment amount is missing. Please use the payment link shared with you.");
-    setFieldState(amountInput, true);
-    return false;
+    setFieldState(amountInput, true); return false;
   }
 
   function validateDeclarations() {
-    const valid = decl1.checked && decl2.checked;
+    var valid = decl1.checked && decl2.checked;
     document.getElementById("decl1Box").classList.toggle("is-error", !decl1.checked);
     document.getElementById("decl2Box").classList.toggle("is-error", !decl2.checked);
-    if (!valid) {
-      showError("declError", "Please accept both declarations to proceed.");
-      return false;
-    }
-    clearError("declError");
-    return true;
+    if (!valid) { showError("declError", "Please accept both declarations to proceed."); return false; }
+    clearError("declError"); return true;
   }
 
   function validateAll() {
     return validateAmount() && validateName() && validateEmail() && validatePhone() && validateDeclarations();
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  //  UI HELPERS
+  // ══════════════════════════════════════════════════════════════
+  function updatePaymentActionsVisibility() {
+    var show = decl1.checked && decl2.checked && Boolean(paymentAmount);
+    paymentActions.classList.toggle("is-visible", show);
+    paymentActions.setAttribute("aria-hidden", show ? "false" : "true");
+    if (cashfreeSubtext) cashfreeSubtext.style.display = show ? "block" : "none";
+  }
+
+  function setButtonLoading(button, spinnerId, loading) {
+    var text    = button.querySelector(".pay-btn-text");
+    var arrow   = button.querySelector(".pay-btn-arrow");
+    var spinner = document.getElementById(spinnerId);
+    neftBtn.disabled     = loading;
+    cashfreeBtn.disabled = loading;
+    button.disabled      = loading;
+    if (text)    text.textContent = loading ? "Processing…" : button.dataset.defaultText;
+    if (arrow)   arrow.style.display = loading ? "none" : "";
+    if (spinner) spinner.style.display = loading ? "" : "none";
   }
 
   function showPaymentPopup() {
@@ -195,254 +173,264 @@
     }
   }
 
-  function getTimestamp() {
-    return new Date().toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Kolkata" });
-  }
-
-  function getDateOnly() {
-    return new Date().toLocaleDateString("en-IN", { dateStyle: "medium", timeZone: "Asia/Kolkata" });
-  }
-
-  function makeSubmissionId() {
-    return "imcure_" + Date.now() + "_" + Math.random().toString(36).slice(2, 10);
-  }
-
+  // ══════════════════════════════════════════════════════════════
+  //  SUBMISSION BUILDER & CUSTOMER STORAGE
+  // ══════════════════════════════════════════════════════════════
   function buildSubmission(paymentMode) {
     return {
-      submission_id: makeSubmissionId(),
-      name: fullNameInput.value.trim(),
-      email: emailInput.value.trim(),
-      phone: "+91 " + phoneInput.value.trim(),
-      phone_raw: phoneInput.value.trim(),
-      amount: formatINR(paymentAmount),
-      amount_raw: paymentAmount,
-      date: getDateOnly(),
-      mode: paymentMode,
-      payment_mode: paymentMode,
-      payment_link: window.location.href,
-      timestamp: getTimestamp(),
-      status: "Pending"
+      submission_id:  makeSubmissionId(),
+      name:           fullNameInput.value.trim(),
+      email:          emailInput.value.trim(),
+      phone:          "+91 " + phoneInput.value.trim(),
+      phone_raw:      phoneInput.value.trim(),
+      amount:         formatINR(paymentAmount),
+      amount_raw:     paymentAmount,
+      date:           getDateOnly(),
+      mode:           paymentMode,
+      payment_mode:   paymentMode,
+      payment_link:   window.location.href,
+      timestamp:      getTimestamp(),
+      status:         "Pending"
     };
   }
 
   function saveCustomerForKyc(submission) {
-    const customer = {
-      name: submission.name,
-      email: submission.email,
-      phone: submission.phone_raw,
-      amount: submission.amount,
-      amount_raw: submission.amount_raw,
-      payment_mode: submission.payment_mode,
+    var customer = {
+      name:                 submission.name,
+      email:                submission.email,
+      phone:                submission.phone_raw,
+      amount:               submission.amount,
+      amount_raw:           submission.amount_raw,
+      payment_mode:         submission.payment_mode,
       payment_submission_id: submission.submission_id,
-      payment_timestamp: submission.timestamp,
-      saved_at: new Date().toISOString()
+      payment_timestamp:    submission.timestamp,
+      saved_at:             new Date().toISOString()
     };
-    localStorage.setItem("imcure_customer", JSON.stringify(customer));
-    localStorage.setItem("imcure_kyc_email", submission.email);
+    try {
+      localStorage.setItem("imcure_customer", JSON.stringify(customer));
+      localStorage.setItem("imcure_kyc_email", submission.email);
+    } catch (e) { warn("localStorage write failed", e); }
   }
 
-  function goToSuccess(submission, delayMs) {
-    saveCustomerForKyc(submission);
-    var successUrl = "success.html?sid=" + encodeURIComponent(submission.submission_id);
-    window.setTimeout(function () {
-      window.location.replace(successUrl);
-    }, delayMs || 1200);
+  // ══════════════════════════════════════════════════════════════
+  //  GOOGLE APPS SCRIPT (NEFT logging — hidden form transport)
+  // ══════════════════════════════════════════════════════════════
+  function hasRequiredBackendConfig() {
+    return /^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/.test(GOOGLE_APPS_SCRIPT_URL);
   }
 
   function postWithHiddenForm(payload, attempt) {
     return new Promise(function (resolve, reject) {
-      const iframeName = "imcure_submission_frame_" + Date.now() + "_" + attempt;
-      const iframe = document.createElement("iframe");
-      const form = document.createElement("form");
-      const input = document.createElement("input");
-      let completed = false;
-      let submitted = false;
+      var iframeName = "imcure_frame_" + Date.now() + "_" + attempt;
+      var iframe = document.createElement("iframe");
+      var form   = document.createElement("form");
+      var input  = document.createElement("input");
+      var completed = false, submitted = false;
 
-      function cleanup() {
-        setTimeout(function () {
-          if (form.parentNode) form.parentNode.removeChild(form);
-          if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
-        }, 500);
-      }
+      function cleanup() { setTimeout(function () { if (form.parentNode) form.parentNode.removeChild(form); if (iframe.parentNode) iframe.parentNode.removeChild(iframe); }, 500); }
 
-      const timer = setTimeout(function () {
+      var timer = setTimeout(function () {
         if (completed) return;
-        completed = true;
-        cleanup();
+        completed = true; cleanup();
         reject(new Error("Apps Script submission timed out."));
       }, BACKEND_TIMEOUT_MS);
 
-      iframe.name = iframeName;
-      iframe.style.display = "none";
+      iframe.name = iframeName; iframe.style.display = "none";
       iframe.onload = function () {
         if (!submitted || completed) return;
-        completed = true;
-        clearTimeout(timer);
-        cleanup();
+        completed = true; clearTimeout(timer); cleanup();
         resolve({ ok: true, transport: "form", attempt: attempt });
       };
 
-      form.method = "POST";
-      form.action = GOOGLE_APPS_SCRIPT_URL;
-      form.target = iframeName;
-      form.style.display = "none";
+      form.method = "POST"; form.action = GOOGLE_APPS_SCRIPT_URL;
+      form.target = iframeName; form.style.display = "none";
       form.enctype = "application/x-www-form-urlencoded";
 
-      input.type = "hidden";
-      input.name = "payload";
+      input.type = "hidden"; input.name = "payload";
       input.value = JSON.stringify(payload);
       form.appendChild(input);
       document.body.appendChild(iframe);
       document.body.appendChild(form);
 
-      log("Submitting to Apps Script", { transport: "form", attempt: attempt, submission_id: payload.submission_id });
-      submitted = true;
-      form.submit();
+      submitted = true; form.submit();
     });
   }
 
   function postWithBeacon(payload) {
     if (!navigator.sendBeacon) return false;
     try {
-      const body = new URLSearchParams({ payload: JSON.stringify(payload) });
-      const ok = navigator.sendBeacon(GOOGLE_APPS_SCRIPT_URL, body);
-      log("sendBeacon fallback", { ok: ok, submission_id: payload.submission_id });
-      return ok;
-    } catch (error) {
-      warn("sendBeacon failed", error);
-      return false;
-    }
+      var body = new URLSearchParams({ payload: JSON.stringify(payload) });
+      return navigator.sendBeacon(GOOGLE_APPS_SCRIPT_URL, body);
+    } catch (e) { return false; }
   }
 
   async function postToGoogleAppsScript(payload) {
-    /*
-      CORS-safe production transport:
-      - Do not use normal fetch for Apps Script POST from GitHub Pages.
-      - A hidden form/iframe POST avoids preflight and avoids Firefox/Chrome NetworkError issues.
-      - Apps Script receives the same JSON inside the form field named "payload".
-      - If the iframe does not load in time, the same submission_id is retried once and de-duped by Apps Script.
-    */
-    if (!hasRequiredBackendConfig()) {
-      throw new Error("Paste the Google Apps Script /exec Web App URL in public/app.js.");
-    }
-
+    if (!hasRequiredBackendConfig()) throw new Error("Apps Script URL not configured.");
     try {
       return await postWithHiddenForm(payload, 1);
-    } catch (firstError) {
-      warn("First Apps Script submit failed, retrying", firstError);
-      await new Promise(function (resolve) { setTimeout(resolve, BACKEND_RETRY_DELAY_MS); });
+    } catch (e1) {
+      warn("Apps Script first attempt failed, retrying", e1);
+      await new Promise(function (r) { setTimeout(r, BACKEND_RETRY_DELAY_MS); });
       try {
         return await postWithHiddenForm(payload, 2);
-      } catch (secondError) {
-        warn("Second Apps Script submit timed out, using beacon fallback", secondError);
+      } catch (e2) {
         if (postWithBeacon(payload)) return { ok: true, transport: "beacon" };
-        throw secondError;
+        throw e2;
       }
     }
   }
 
   async function submitDeclaration(paymentMode) {
-    const now = Date.now();
+    var now = Date.now();
     if (isSubmitting || now - lastSubmissionAt < SUBMISSION_COOLDOWN_MS) {
       throw new Error("Please wait a moment before submitting again.");
     }
-
-    isSubmitting = true;
-    lastSubmissionAt = now;
-
+    isSubmitting = true; lastSubmissionAt = now;
     try {
-      const submission = buildSubmission(paymentMode);
-      log("Prepared submission", submission);
+      var submission = buildSubmission(paymentMode);
       await postToGoogleAppsScript(submission);
-      log("Backend submission dispatched", { submission_id: submission.submission_id });
       return submission;
     } finally {
       isSubmitting = false;
     }
   }
 
-  function openUpiLink() {
-    if (!hasValidUpiId()) {
-      toast("UPI ID is not configured. Showing QR instead.", "error", 4000);
-      showPaymentPopup();
+  // ══════════════════════════════════════════════════════════════
+  //  NEFT HANDLER — identical to original behavior
+  // ══════════════════════════════════════════════════════════════
+  async function handleNeft() {
+    if (!validateAll()) {
+      var firstError = document.querySelector(".is-error");
+      if (firstError) firstError.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
-
-    const upiUrl = "upi://pay?pa=" + encodeURIComponent(UPI_ID) + "&pn=" + encodeURIComponent(UPI_NAME) + "&am=" + encodeURIComponent(String(paymentAmount)) + "&cu=INR";
-    window.location.href = upiUrl;
-    setTimeout(function () {
-      if (!document.hidden) showPaymentPopup();
-    }, 1800);
+    setButtonLoading(neftBtn, "neftSpinner", true);
+    try {
+      var submission = await submitDeclaration("NEFT / RTGS");
+      toast("Bank details ready. Close this panel when done to continue.", "success", 4000);
+      saveCustomerForKyc(submission);
+      pendingSuccessUrl = "success.html?sid=" + encodeURIComponent(submission.submission_id);
+      showPaymentPopup();
+    } catch (err) {
+      toast(getErrorMessage(err), "error", 5000);
+    } finally {
+      setButtonLoading(neftBtn, "neftSpinner", false);
+    }
   }
 
-  async function handlePayment(method, button, spinnerId) {
+  // ══════════════════════════════════════════════════════════════
+  //  CASHFREE HANDLER — new
+  // ══════════════════════════════════════════════════════════════
+  async function handleCashfreePayment() {
     if (!validateAll()) {
-      const firstError = document.querySelector(".is-error");
+      var firstError = document.querySelector(".is-error");
       if (firstError) firstError.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
 
-    setButtonLoading(button, spinnerId, true);
+    // Verify Cashfree SDK is loaded
+    if (typeof Cashfree === "undefined") {
+      toast("Payment SDK not loaded. Please refresh and try again.", "error", 5000);
+      return;
+    }
+
+    setButtonLoading(cashfreeBtn, "cashfreeSpinner", true);
 
     try {
-      const submission = await submitDeclaration(method);
-      if (method === "UPI") {
-        toast("Payment app opening. Return here after payment to continue.", "success", 5000);
-        goToSuccess(submission, 5000);
-        openUpiLink();
-      } else {
-        toast("Bank details ready. Close this panel when done to continue.", "success", 4000);
-        saveCustomerForKyc(submission);
-        pendingSuccessUrl = "success.html?sid=" + encodeURIComponent(submission.submission_id);
-        showPaymentPopup();
+      // Build submission record (for our own logs)
+      var submission = buildSubmission("Cashfree Online");
+      saveCustomerForKyc(submission);
+
+      // Fire-and-forget log to Google Apps Script
+      postToGoogleAppsScript(submission).catch(function (e) {
+        warn("Apps Script log failed (non-critical)", e);
+      });
+
+      // ── Step 1: Create order on Hostinger backend ──────────────
+      toast("Creating secure payment order…", "", 8000);
+
+      var res = await fetch(CASHFREE_BACKEND + "/create-order.php", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({
+          name:          fullNameInput.value.trim(),
+          email:         emailInput.value.trim(),
+          phone:         phoneInput.value.trim(),
+          amount:        paymentAmount,
+          submission_id: submission.submission_id
+        })
+      });
+
+      var data = await res.json();
+
+      if (!res.ok || !data.payment_session_id) {
+        throw new Error(data.error || "Could not create payment order. Please try again.");
       }
-    } catch (error) {
-      console.error("[IMCure Payment] Backend submission failed", error);
-      toast(getErrorMessage(error), "error", 5000);
-    } finally {
-      setButtonLoading(button, spinnerId, false);
+
+      log("Order created:", data.order_id);
+
+      // ── Step 2: Open Cashfree hosted checkout ──────────────────
+      var cashfree = Cashfree({ mode: CASHFREE_MODE });
+
+      var checkoutOptions = {
+        paymentSessionId: data.payment_session_id,
+        returnUrl: "https://imcure.github.io/secure-payment/success.html" +
+                   "?order_id={order_id}" +
+                   "&cf_sid=" + encodeURIComponent(submission.submission_id)
+      };
+
+      // This redirects the user to Cashfree — no code runs after this line
+      await cashfree.checkout(checkoutOptions);
+
+    } catch (err) {
+      console.error("[IMCure Cashfree] Error:", err);
+      toast(getErrorMessage(err), "error", 6000);
+      setButtonLoading(cashfreeBtn, "cashfreeSpinner", false);
     }
+    // Note: do NOT call setButtonLoading(false) here on the happy path —
+    // the page navigates away, so it would cause a flash.
   }
 
-  neftBtn.dataset.defaultText = neftBtn.querySelector(".pay-btn-text").textContent;
-  upiBtn.dataset.defaultText = upiBtn.querySelector(".pay-btn-text").textContent;
+  // ══════════════════════════════════════════════════════════════
+  //  AMOUNT INITIALISATION
+  // ══════════════════════════════════════════════════════════════
+  neftBtn.dataset.defaultText      = neftBtn.querySelector(".pay-btn-text").textContent;
+  cashfreeBtn.dataset.defaultText  = cashfreeBtn.querySelector(".pay-btn-text").textContent;
 
   if (paymentAmount) {
-    // Amount came from URL — show display bar, hide editable field
-    amountInput.value = String(paymentAmount);
+    amountInput.value          = String(paymentAmount);
     amountFieldGroup.style.display = "none";
-    amountDisplay.style.display = "flex";
-    amountValue.textContent = formatINR(paymentAmount);
+    amountDisplay.style.display    = "flex";
+    amountValue.textContent        = formatINR(paymentAmount);
   } else {
-    // No URL param — let user type the amount manually
     amountFieldGroup.style.display = "block";
-    amountDisplay.style.display = "none";
+    amountDisplay.style.display    = "none";
     amountInput.removeAttribute("readonly");
     amountInput.placeholder = "Enter amount (e.g. 20000)";
-    amountInput.value = "";
+    amountInput.value       = "";
     clearError("amountError");
   }
 
-  // Live-sync typed amount into paymentAmount and the display bar
+  // Live-sync typed amount
   amountInput.addEventListener("input", function () {
     var val = Number(amountInput.value);
     if (Number.isFinite(val) && val > 0) {
       paymentAmount = val;
       amountDisplay.style.display = "flex";
-      amountValue.textContent = formatINR(val);
+      amountValue.textContent     = formatINR(val);
       clearError("amountError");
       setFieldState(amountInput, false);
     } else {
       paymentAmount = null;
       amountDisplay.style.display = "none";
-      if (amountInput.value !== "") {
-        showError("amountError", "Please enter a valid amount.");
-        setFieldState(amountInput, true);
-      }
+      if (amountInput.value !== "") { showError("amountError", "Please enter a valid amount."); setFieldState(amountInput, true); }
     }
     updatePaymentActionsVisibility();
   });
 
+  // ══════════════════════════════════════════════════════════════
+  //  EVENT LISTENERS
+  // ══════════════════════════════════════════════════════════════
   phoneInput.addEventListener("input", function () {
     phoneInput.value = phoneInput.value.replace(/\D/g, "").slice(0, 10);
   });
@@ -455,33 +443,31 @@
     });
   });
 
-  [decl1, decl2].forEach(function (checkbox) {
-    checkbox.addEventListener("change", function () {
-      checkbox.closest(".declaration-box").classList.toggle("is-checked", checkbox.checked);
-      checkbox.closest(".declaration-box").classList.remove("is-error");
+  [decl1, decl2].forEach(function (cb) {
+    cb.addEventListener("change", function () {
+      cb.closest(".declaration-box").classList.toggle("is-checked", cb.checked);
+      cb.closest(".declaration-box").classList.remove("is-error");
       clearError("declError");
       updatePaymentActionsVisibility();
     });
   });
 
   document.querySelectorAll(".declaration-box").forEach(function (box) {
-    box.addEventListener("click", function (event) {
-      if (event.target.tagName === "INPUT") return;
-      event.preventDefault();
-      const checkbox = box.querySelector("input[type='checkbox']");
-      checkbox.checked = !checkbox.checked;
-      checkbox.dispatchEvent(new Event("change", { bubbles: true }));
+    box.addEventListener("click", function (e) {
+      if (e.target.tagName === "INPUT") return;
+      e.preventDefault();
+      var cb = box.querySelector("input[type='checkbox']");
+      cb.checked = !cb.checked;
+      cb.dispatchEvent(new Event("change", { bubbles: true }));
     });
   });
 
   popupClose.addEventListener("click", closePaymentPopup);
-  popup.addEventListener("click", function (event) {
-    if (event.target === popup) closePaymentPopup();
-  });
+  popup.addEventListener("click", function (e) { if (e.target === popup) closePaymentPopup(); });
 
-  neftBtn.addEventListener("click", function () { handlePayment("NEFT / RTGS", neftBtn, "neftSpinner"); });
-  upiBtn.addEventListener("click", function () { handlePayment("UPI", upiBtn, "upiSpinner"); });
+  neftBtn.addEventListener("click", handleNeft);
+  cashfreeBtn.addEventListener("click", handleCashfreePayment);
 
-  log("Loaded", { amount: paymentAmount, backendConfigured: hasRequiredBackendConfig() });
+  log("Loaded", { amount: paymentAmount, cashfreeMode: CASHFREE_MODE, backend: CASHFREE_BACKEND });
   updatePaymentActionsVisibility();
 })();
