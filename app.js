@@ -325,7 +325,7 @@
   // ══════════════════════════════════════════════════════════════
   //  UPI HANDLER — opens UPI app with pre-filled amount
   // ══════════════════════════════════════════════════════════════
-  async function handleUpi() {
+  function handleUpi() {
     if (!validateAll()) {
       var firstError = document.querySelector(".is-error");
       if (firstError) firstError.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -347,14 +347,19 @@
                   "&cu=INR" +
                   "&tn=" + encodeURIComponent("IMCure Payment");
 
-    // Open UPI app
-    window.location.href = upiLink;
+    // Fire the UPI deep link — on mobile this opens the UPI app;
+    // on desktop it silently fails (browser ignores unknown protocol).
+    var a = document.createElement("a");
+    a.href = upiLink;
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
 
-    // After 1.5 s show QR popup as fallback (in case UPI app did not open)
-    setTimeout(function () {
-      toast("Scan the QR code if your UPI app did not open.", "", 4500);
-      showPaymentPopup();
-    }, 1500);
+    // Show popup immediately — shows QR code for desktop users or
+    // as confirmation for mobile users after they finish paying.
+    toast("Opening UPI app… or scan the QR code below.", "", 4500);
+    showPaymentPopup();
   }
 
   // ══════════════════════════════════════════════════════════════
