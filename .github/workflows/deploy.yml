@@ -17,8 +17,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Prepare deploy folder
+      - name: Deploy to gh-pages
         run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Build the deploy directory (exclude workflow files and stale assets)
           mkdir -p _deploy
           rsync -a \
             --exclude='.git' \
@@ -28,10 +32,19 @@ jobs:
             --exclude='_deploy' \
             . _deploy/
 
-      - name: Deploy to gh-pages
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          branch: gh-pages
-          folder: _deploy
-          clean: true
-          commit-message: "Deploy from main [skip ci]"
+          # Checkout gh-pages (or create it if it doesn't exist)
+          git fetch origin gh-pages 2>/dev/null || true
+          git worktree add gh-pages-out gh-pages 2>/dev/null || \
+            git worktree add --orphan gh-pages-out gh-pages
+
+          # Sync files into the worktree
+          rsync -a --delete \
+            --exclude='.git' \
+            _deploy/ gh-pages-out/
+
+          # Commit and push
+          cd gh-pages-out
+          git add -A
+          git diff --cached --quiet && echo "No changes to deploy." && exit 0
+          git commit -m "Deploy from main @ $(git -C .. rev-parse --short HEAD)"
+          git push origin gh-pages
