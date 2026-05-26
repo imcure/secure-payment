@@ -761,7 +761,7 @@ body {
   .payment-actions.is-visible {
     grid-template-columns: 1fr 1fr;
   }
-  .payment-actions.is-visible #cashfreeBtn {
+  .payment-actions.is-visible #upiBtn {
     grid-column: 1 / -1;
   }
 }
