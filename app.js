@@ -142,7 +142,7 @@
   //  UI HELPERS
   // ══════════════════════════════════════════════════════════════
   function updatePaymentActionsVisibility() {
-    var show = decl1.checked && decl2.checked && Boolean(paymentAmount);
+    var show = decl1.checked && decl2.checked;
     paymentActions.classList.toggle("is-visible", show);
     paymentActions.setAttribute("aria-hidden", show ? "false" : "true");
     if (cashfreeSubtext) cashfreeSubtext.style.display = show ? "block" : "none";
