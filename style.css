@@ -751,19 +751,8 @@ body {
   }
 }
 
-@media (max-width: 479px) {
-  .payment-actions.is-visible {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (min-width: 480px) {
-  .payment-actions.is-visible {
-    grid-template-columns: 1fr 1fr;
-  }
-  .payment-actions.is-visible #upiBtn {
-    grid-column: 1 / -1;
-  }
+.payment-actions.is-visible {
+  grid-template-columns: 1fr;
 }
 
 @media (max-width: 360px) {
